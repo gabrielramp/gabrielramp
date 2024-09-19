@@ -1,0 +1,42 @@
+name: Update Canvas Image
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Runs daily at midnight UTC
+  workflow_dispatch: # Allows manual triggering
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v3
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+
+    - name: Set Up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: '18'
+
+    - name: Install Dependencies
+      run: |
+        cd canvas-generator
+        npm install
+
+    - name: Run Image Generation Script
+      run: |
+        cd canvas-generator
+        node generateCanvas.js
+
+    - name: Commit and Push Changes
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+        git config user.name "github-actions[bot]"
+        git config user.email "github-actions[bot]@users.noreply.github.com"
+        git add images/canvas.png
+        git commit -m "Update canvas image [skip ci]" || echo "No changes to commit"
+        git push
